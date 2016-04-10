@@ -473,16 +473,14 @@ namespace tools
     });
     THROW_WALLET_EXCEPTION_IF(!all_are_txin_to_key, error::unexpected_txin_type, tx);
     
-    //AC
-    
     bool dust_sent_elsewhere = (dust_policy.addr_for_dust.m_spend_public_key != change_dts.addr.m_spend_public_key 
                                 || dust_policy.addr_for_dust.m_view_public_key  != change_dts.addr.m_view_public_key);
     
-    if (dust_policy.add_to_fee || dust_sent_elsewhere  )  change_dts.amount -= dust;            //AC
+    if (dust_policy.add_to_fee || dust_sent_elsewhere  )  change_dts.amount -= dust;     
 
     ptx.key_images = key_images;
-    ptx.fee = (dust_policy.add_to_fee ? fee + dust : fee);                    //AC
-    ptx.dust = ((!dust_policy.add_to_fee && dust_sent_elsewhere) ? dust : 0); //AC: Only record dust amount if it wasn't included in the fee or the change.
+    ptx.fee = (dust_policy.add_to_fee ? fee + dust : fee);                    
+    ptx.dust = ((!dust_policy.add_to_fee && dust_sent_elsewhere) ? dust : 0);
     ptx.tx = tx;
     ptx.change_dts = change_dts;
     ptx.selected_transfers = selected_transfers;
