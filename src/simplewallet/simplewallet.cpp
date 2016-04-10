@@ -930,7 +930,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args_)
     
     uint64_t dust_in_fee = total_fee - ptx_vector.size()*DEFAULT_FEE;
     
-    //AC: Always confirm
+    //Always confirm
     std::string prompt_str = "Your transaction needs to be split into " + std::to_string(ptx_vector.size()) + " transactions.\n" 
                              + "This will result in a fee of "  + print_money(total_fee);
     if (dust_in_fee != 0) prompt_str += " of which " + print_money(dust_in_fee) + " is dust from change";
