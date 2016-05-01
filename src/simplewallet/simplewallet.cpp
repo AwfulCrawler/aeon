@@ -230,7 +230,7 @@ simple_wallet::simple_wallet()
   m_cmd_binder.set_handler("incoming_transfers", boost::bind(&simple_wallet::show_incoming_transfers, this, _1), "incoming_transfers [available|unavailable] - Show incoming transfers - all of them or filter them by availability");
   m_cmd_binder.set_handler("payments", boost::bind(&simple_wallet::show_payments, this, _1), "payments <payment_id_1> [<payment_id_2> ... <payment_id_N>] - Show payments <payment_id_1>, ... <payment_id_N>");
   m_cmd_binder.set_handler("bc_height", boost::bind(&simple_wallet::show_blockchain_height, this, _1), "Show blockchain height");
-  m_cmd_binder.set_handler("transfer", boost::bind(&simple_wallet::transfer, this, _1), "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [payment_id] - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively. <mixin_count> is the number of transactions yours is indistinguishable from (from 0 to maximum available)");
+  m_cmd_binder.set_handler("transfer", boost::bind(&simple_wallet::transfer, this, _1), "transfer <mixin_count> <addr_1> <amount_1> [<addr_2> <amount_2> ... <addr_N> <amount_N>] [payment_id] [subtract-fee|subtract-fee-from-all]\n                     - Transfer <amount_1>,... <amount_N> to <address_1>,... <address_N>, respectively,\n                       optionally subtracting the transaction fee from <amount_1> (subtract-fee) or from all amounts equally (subtract-fee-from-all).\n                       <mixin_count> is the number of transactions yours is indistinguishable from (from 0 to maximum available).");
   m_cmd_binder.set_handler("set_log", boost::bind(&simple_wallet::set_log, this, _1), "set_log <level> - Change current log detalization level, <level> is a number 0-4");
   m_cmd_binder.set_handler("address", boost::bind(&simple_wallet::print_address, this, _1), "Show current wallet public address");
   m_cmd_binder.set_handler("save", boost::bind(&simple_wallet::save, this, _1), "Save wallet synchronized data");
@@ -872,6 +872,20 @@ bool simple_wallet::transfer(const std::vector<std::string> &args_)
   }
   local_args.erase(local_args.begin());
 
+  tools::tx_fee_policy fee_policy;
+  if (local_args.back().compare("subtract-fee")==0)
+  {
+    fee_policy = tools::SUBTRACT_FROM_FIRST;
+    local_args.pop_back();
+  }
+  else if (local_args.back().compare("subtract-fee-from-all")==0)
+  {
+    fee_policy = tools::SUBTRACT_FROM_ALL;
+    local_args.pop_back();
+  }
+  else
+    fee_policy = tools::ADD_TO_TOTAL;
+
   std::vector<uint8_t> extra;
   if (1 == local_args.size() % 2)
   {
@@ -918,7 +932,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args_)
   try
   {
     // figure out what tx will be necessary
-    auto ptx_vector = m_wallet->create_transactions(dsts, fake_outs_count, 0 /* unlock_time */, DEFAULT_FEE, extra);
+    auto ptx_vector = m_wallet->create_transactions(dsts, fake_outs_count, 0 /* unlock_time */, DEFAULT_FEE, extra, fee_policy);
 
     // if more than one tx necessary, prompt user to confirm
     if (ptx_vector.size() > 1)
@@ -997,6 +1011,10 @@ bool simple_wallet::transfer(const std::vector<std::string> &args_)
   catch (const tools::error::zero_destination&)
   {
     fail_msg_writer() << "one of destinations is zero";
+  }
+  catch (const tools::error::subtract_fee_error&)
+  {
+    fail_msg_writer() << "at least one fee amount exceeds a destination amount";
   }
   catch (const tools::error::tx_too_big& e)
   {
