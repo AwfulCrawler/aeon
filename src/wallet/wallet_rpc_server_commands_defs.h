@@ -33,6 +33,7 @@
 #include "cryptonote_core/cryptonote_basic.h"
 #include "crypto/hash.h"
 #include "wallet_rpc_server_error_codes.h"
+#include "wallet2.h"
 namespace tools
 {
 namespace wallet_rpc
@@ -97,7 +98,7 @@ namespace wallet_rpc
       uint64_t mixin;
       uint64_t unlock_time;
       std::string payment_id;
-      uint8_t fee_policy;
+      uint8_t fee_policy = tx_fee_policy::ADD_TO_TOTAL;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(destinations)
@@ -128,7 +129,7 @@ namespace wallet_rpc
       uint64_t mixin;
       uint64_t unlock_time;
       std::string payment_id;
-      uint8_t fee_policy;
+      uint8_t fee_policy = tx_fee_policy::ADD_TO_TOTAL;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(destinations)

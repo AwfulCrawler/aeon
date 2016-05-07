@@ -171,7 +171,7 @@ namespace tools
 
     try
     {
-      std::vector<wallet2::pending_tx> ptx_vector = m_wallet.create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra, (tx_fee_policy)req.fee_policy);
+      std::vector<wallet2::pending_tx> ptx_vector = m_wallet.create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra, static_cast<tx_fee_policy>(req.fee_policy));
 
       // reject proposed transactions if there are more than one.  see on_transfer_split below.
       if (ptx_vector.size() != 1)
@@ -222,7 +222,7 @@ namespace tools
 
     try
     {
-      std::vector<wallet2::pending_tx> ptx_vector = m_wallet.create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra, (tx_fee_policy)req.fee_policy);
+      std::vector<wallet2::pending_tx> ptx_vector = m_wallet.create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra, static_cast<tx_fee_policy>(req.fee_policy));
 
       m_wallet.commit_tx(ptx_vector);
 

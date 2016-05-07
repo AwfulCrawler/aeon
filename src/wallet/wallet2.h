@@ -81,7 +81,8 @@ namespace tools
   {
     ADD_TO_TOTAL            = 0,
     SUBTRACT_FROM_FIRST     = 1,
-    SUBTRACT_FROM_ALL       = 2
+    SUBTRACT_FROM_ALL       = 2,
+    MAX_VALUE               = SUBTRACT_FROM_ALL
   };
 
   class wallet2

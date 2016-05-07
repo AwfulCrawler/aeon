@@ -838,6 +838,8 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<crypto
   // failsafe split attempt counter
   size_t attempt_count = 0;
 
+  THROW_WALLET_EXCEPTION_IF(fee_policy > tx_fee_policy::MAX_VALUE,error::invalid_fee_policy);
+
   for(attempt_count = 1; ;attempt_count++)
   {
     auto split_values = split_amounts(dsts, attempt_count);
@@ -854,12 +856,12 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<crypto
       // for each new destination vector (i.e. for each new tx)
       for (auto & dst_vector : split_values)
       {
-        if (fee_policy == SUBTRACT_FROM_FIRST)
+        if (fee_policy == tx_fee_policy::SUBTRACT_FROM_FIRST)
         {
           THROW_WALLET_EXCEPTION_IF(dst_vector[0].amount <= fee,error::subtract_fee_error);
           dst_vector[0].amount -= fee;
         }
-        else if (fee_policy == SUBTRACT_FROM_ALL)
+        else if (fee_policy == tx_fee_policy::SUBTRACT_FROM_ALL)
         {
           for (size_t n=0; n < dst_vector.size(); ++n)
           {
@@ -876,7 +878,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<crypto
         //If fee is added to total, also add dust change to total (specified by dust policy)
         //If fee is subtracted from one or all of the sent amounts then do not add dust change to the fee.  Send it back as change.
         //Alternatively, always calling with tx_dust_policy(fee,false,m_account_public_address) would maybe be less confusing for users.
-        if (fee_policy == ADD_TO_TOTAL)
+        if (fee_policy == tx_fee_policy::ADD_TO_TOTAL)
           transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee,true), tx, ptx);
         else
           transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee,false,m_account_public_address), tx, ptx);

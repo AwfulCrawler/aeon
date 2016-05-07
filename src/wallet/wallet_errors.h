@@ -521,6 +521,14 @@ namespace tools
       }
     };
     //----------------------------------------------------------------------------------------------------
+    struct invalid_fee_policy : public transfer_error
+    {
+      explicit invalid_fee_policy(std::string&& loc)
+        : transfer_error(std::move(loc), "fee policy not specified correctly")
+      {
+      }
+    };
+    //----------------------------------------------------------------------------------------------------
     struct subtract_fee_error : public transfer_error
     {
       explicit subtract_fee_error(std::string&& loc)

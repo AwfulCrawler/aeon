@@ -875,16 +875,16 @@ bool simple_wallet::transfer(const std::vector<std::string> &args_)
   tools::tx_fee_policy fee_policy;
   if (local_args.back().compare("subtract-fee")==0)
   {
-    fee_policy = tools::SUBTRACT_FROM_FIRST;
+    fee_policy = tools::tx_fee_policy::SUBTRACT_FROM_FIRST;
     local_args.pop_back();
   }
   else if (local_args.back().compare("subtract-fee-from-all")==0)
   {
-    fee_policy = tools::SUBTRACT_FROM_ALL;
+    fee_policy = tools::tx_fee_policy::SUBTRACT_FROM_ALL;
     local_args.pop_back();
   }
   else
-    fee_policy = tools::ADD_TO_TOTAL;
+    fee_policy = tools::tx_fee_policy::ADD_TO_TOTAL;
 
   std::vector<uint8_t> extra;
   if (1 == local_args.size() % 2)
