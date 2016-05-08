@@ -832,13 +832,14 @@ void wallet2::commit_tx(std::vector<pending_tx>& ptx_vector)
 //
 // this function will make multiple calls to wallet2::transfer if multiple
 // transactions will be required
-std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, const uint64_t fee, const std::vector<uint8_t> extra, const tx_fee_policy fee_policy)
+std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, const uint64_t fee, const std::vector<uint8_t> extra, const bool subtract_fee)
 {
+  // Throw exception for zero destinations here since we may be manipulating amounts
+  // of members of dsts in this function if we are subtracting the fee
+  THROW_WALLET_EXCEPTION_IF(dsts.empty(), error::zero_destination);
 
   // failsafe split attempt counter
   size_t attempt_count = 0;
-
-  THROW_WALLET_EXCEPTION_IF(fee_policy > tx_fee_policy::MAX_VALUE,error::invalid_fee_policy);
 
   for(attempt_count = 1; ;attempt_count++)
   {
@@ -856,32 +857,22 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<crypto
       // for each new destination vector (i.e. for each new tx)
       for (auto & dst_vector : split_values)
       {
-        if (fee_policy == tx_fee_policy::SUBTRACT_FROM_FIRST)
+        if (subtract_fee)
         {
-          THROW_WALLET_EXCEPTION_IF(dst_vector[0].amount <= fee,error::subtract_fee_error);
-          dst_vector[0].amount -= fee;
-        }
-        else if (fee_policy == tx_fee_policy::SUBTRACT_FROM_ALL)
-        {
-          for (size_t n=0; n < dst_vector.size(); ++n)
-          {
-            uint64_t old_amount = dst_vector[n].amount;
-            dst_vector[n].amount -= fee / dst_vector.size();
-            if (n + 1 == dst_vector.size())
-              dst_vector[n].amount -= fee % dst_vector.size();
-            THROW_WALLET_EXCEPTION_IF(old_amount == 0 || old_amount < dst_vector[n].amount,error::subtract_fee_error);
-          }
+          cryptonote::tx_destination_entry& first_dst = dst_vector.front();
+          THROW_WALLET_EXCEPTION_IF(first_dst.amount <= fee,error::subtract_fee_error);
+          first_dst.amount -= fee;
         }
         cryptonote::transaction tx;
         pending_tx ptx;
 
-        //If fee is added to total, also add dust change to total (specified by dust policy)
-        //If fee is subtracted from one or all of the sent amounts then do not add dust change to the fee.  Send it back as change.
-        //Alternatively, always calling with tx_dust_policy(fee,false,m_account_public_address) would maybe be less confusing for users.
-        if (fee_policy == tx_fee_policy::ADD_TO_TOTAL)
-          transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee,true), tx, ptx);
-        else
+        //If fee is added to total, also add dust change to total (specified by dust policy),
+        //otherwise send dust change back to user.  Alternatively, always calling with tx_dust_policy(fee,false,m_account_public_address)
+        //would maybe be less confusing for users.
+        if (subtract_fee)
           transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee,false,m_account_public_address), tx, ptx);
+        else
+          transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee,true), tx, ptx);
 
         ptx_vector.push_back(ptx);
 
