@@ -524,7 +524,7 @@ namespace tools
     struct subtract_fee_error : public transfer_error
     {
       explicit subtract_fee_error(std::string&& loc)
-        : transfer_error(std::move(loc), "fee amount exceeds destination amount")
+        : transfer_error(std::move(loc), "destination amount does not exceed fee amount")
       {
       }
     };

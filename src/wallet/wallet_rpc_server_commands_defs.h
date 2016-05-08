@@ -97,7 +97,12 @@ namespace wallet_rpc
       uint64_t mixin;
       uint64_t unlock_time;
       std::string payment_id;
-      bool subtract_fee = false;
+      bool subtract_fee;
+
+      request()
+        : subtract_fee(false)
+      {
+      }
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(destinations)
@@ -128,7 +133,12 @@ namespace wallet_rpc
       uint64_t mixin;
       uint64_t unlock_time;
       std::string payment_id;
-      bool subtract_fee = false;
+      bool subtract_fee;
+
+      request()
+        : subtract_fee(false)
+      {
+      }
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(destinations)

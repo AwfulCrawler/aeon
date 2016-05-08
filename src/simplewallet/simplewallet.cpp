@@ -1007,7 +1007,7 @@ bool simple_wallet::transfer(const std::vector<std::string> &args_)
   }
   catch (const tools::error::subtract_fee_error&)
   {
-    fail_msg_writer() << "fee amount exceeds specified first destination amount";
+    fail_msg_writer() << "first destination amount does not exceed fee amount";
   }
   catch (const tools::error::tx_too_big& e)
   {

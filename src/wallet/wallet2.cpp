@@ -834,8 +834,8 @@ void wallet2::commit_tx(std::vector<pending_tx>& ptx_vector)
 // transactions will be required
 std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, const uint64_t fee, const std::vector<uint8_t> extra, const bool subtract_fee)
 {
-  // Throw exception for zero destinations here since we may be manipulating amounts
-  // of members of dsts in this function if we are subtracting the fee
+  // Throw exception for zero destinations here since we may be manipulating
+  // members of dsts in this function if we are subtracting the fee from them
   THROW_WALLET_EXCEPTION_IF(dsts.empty(), error::zero_destination);
 
   // failsafe split attempt counter
@@ -866,9 +866,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions(std::vector<crypto
         cryptonote::transaction tx;
         pending_tx ptx;
 
-        //If fee is added to total, also add dust change to total (specified by dust policy),
-        //otherwise send dust change back to user.  Alternatively, always calling with tx_dust_policy(fee,false,m_account_public_address)
-        //would maybe be less confusing for users.
+        //If fee is subtracted from total, send dust change back to user, otherwise keep behaviour as before (dust is added to fee).
         if (subtract_fee)
           transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee,false,m_account_public_address), tx, ptx);
         else
